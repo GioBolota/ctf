@@ -1,0 +1,97 @@
+const { test, expect } = require('@playwright/test');
+
+test('Midterm Practice - Complete All Sections', async ({ page }) => {
+
+  // ─────────────────────────────────────────────
+  // Navigate
+  // ─────────────────────────────────────────────
+  await page.goto('http://127.0.0.1:5500/static/midterm-practice.html');
+  await page.waitForLoadState('networkidle');
+
+  // ─────────────────────────────────────────────
+  // SECTION 1: User Registration
+  // ─────────────────────────────────────────────
+  await page.locator('//input[@id="user-name"]').fill('testuser');
+  await page.locator('input[type="password"]').fill('P@ssw0rd!');
+  await page.locator('//input[@value="premium"]').check();
+
+  await page.locator('input[data-category="fiction"]').check();
+  await page.locator('input[data-category="science"]').check();
+
+  await page.locator('#language-dropdown').selectOption('spanish');
+  await page.locator('//select[@name="experience"]').selectOption('intermediate');
+
+  // ─────────────────────────────────────────────
+  // SECTION 2: Color Box Sorting (FIXED & STABLE)
+  // ─────────────────────────────────────────────
+  const colors = ['red', 'blue', 'green'];
+
+  for (const color of colors) {
+    const boxes = page.locator(`.color-box[data-color="${color}"]`);
+    const dropZone = page.locator(`.drop-zone[data-zone="${color}"]`);
+
+    const count = await boxes.count();
+
+    for (let i = 0; i < count; i++) {
+      await boxes.first().dragTo(dropZone);
+    }
+  }
+
+  // Ensure all boxes are sorted
+  await expect(page.locator('#sorted-count'))
+    .toHaveText('9', { timeout: 10000 });
+
+  // ─────────────────────────────────────────────
+  // SECTION 3: Book Inventory Table
+  // ─────────────────────────────────────────────
+  const searchBox = page.locator('#table-search');
+  await searchBox.fill('test');
+  await searchBox.clear();
+
+  await page.locator('#sortByPrice').click();
+
+  // Find expensive book
+  const expensiveBook =
+    page.locator('//td[number(translate(text(), "$", "")) > 40]').first();
+  await expect(expensiveBook).toBeVisible();
+
+  // Add "1984" to cart
+  await page.locator(
+    '//tr[.//td[text()="1984"]]//button[contains(@class,"add-cart-btn")]'
+  ).click();
+
+  // View details for Tolkien book
+  await page.locator(
+    '//tr[.//td[contains(text(),"Tolkien")]]//button[contains(@class,"view-details-btn")]'
+  ).click();
+
+  await expect(page.locator('#actions-count'))
+    .toHaveText('2', { timeout: 10000 });
+
+  // ─────────────────────────────────────────────
+  // SECTION 4: Grid Challenge
+  // ─────────────────────────────────────────────
+  page.once('dialog', async dialog => {
+    expect(dialog.type()).toBe('prompt');
+    await dialog.accept('CONFIRM');
+  });
+
+  await page.locator('#verifyBtn').click();
+
+  await expect(page.locator('#verify-status'))
+    .toContainText('Account verified', { timeout: 10000 });
+
+  const positions = [2, 5, 8];
+  for (const pos of positions) {
+    await page.locator(`.grid-box[data-position="${pos}"]`).click();
+  }
+
+  await expect(page.locator('#required-clicked'))
+    .toHaveText('3', { timeout: 10000 });
+
+  // ─────────────────────────────────────────────
+  // FINAL VERIFICATION
+  // ─────────────────────────────────────────────
+  await expect(page.locator('#submitBtn'))
+    .toBeEnabled({ timeout: 10000 });
+});
