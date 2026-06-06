@@ -1,1 +1,0 @@
- npx playwright test tests/midterm-practice.spec.js --project=chromium --headed
